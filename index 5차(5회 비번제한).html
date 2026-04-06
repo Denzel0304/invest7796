@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INVEST7</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --bg: #0a0c0f;
+    --bg2: #111418;
+    --bg3: #1a1f26;
+    --border: #2a3040;
+    --accent: #00d4aa;
+    --accent2: #ff6b35;
+    --red: #ff4560;
+    --green: #00d4aa;
+    --text: #e8eaf0;
+    --text2: #8892a0;
+    --text3: #4a5568;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── LOCK SCREEN ── */
+  #lockScreen {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 9999;
+  }
+  .lock-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 72px;
+    letter-spacing: 12px;
+    color: var(--accent);
+    text-shadow: 0 0 40px rgba(0,212,170,0.4);
+    margin-bottom: 8px;
+  }
+  .lock-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 48px;
+  }
+  .lock-box {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 40px 48px;
+    width: 320px;
+  }
+  .lock-label {
+    font-size: 15px;
+    letter-spacing: 3px;
+    color: var(--text3);
+    text-transform: uppercase;
+    align-self: flex-start;
+  }
+  .lock-input {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 24px;
+    letter-spacing: 8px;
+    text-align: center;
+    padding: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .lock-input:focus { border-color: var(--accent); }
+  .lock-input.error { border-color: var(--red); animation: shake 0.3s; }
+  @keyframes shake {
+    0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)}
+  }
+  .lock-btn {
+    width: 100%;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 4px;
+    padding: 14px;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  .lock-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+  .lock-err { font-size: 13px; color: var(--red); letter-spacing: 1px; height: 16px; }
+
+  /* ── APP ── */
+  #app { display: none; min-height: 100vh; }
+
+  /* ── HEADER ── */
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 40px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 6px;
+    color: var(--accent);
+  }
+  .header-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--text3);
+    letter-spacing: 2px;
+  }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    justify-content: center;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    padding: 0 40px;
+  }
+  .tab {
+    padding: 18px 40px;
+    font-size: 16px;
+    letter-spacing: 2px;
+    color: var(--text3);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+    font-weight: 600;
+  }
+  .tab:hover { color: var(--text2); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ── CONTENT ── */
+  .content { padding: 40px; max-width: 1200px; margin: 0 auto; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    display: flex; align-items: baseline; gap: 16px;
+    margin-bottom: 32px;
+  }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 4px;
+    color: var(--text);
+  }
+  .section-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    color: var(--accent);
+    letter-spacing: 2px;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 28px 32px;
+    margin-bottom: 24px;
+  }
+  .card-title {
+    font-size: 15px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 20px;
+    font-weight: 600;
+  }
+
+  /* ── FORM ── */
+  .form-row { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
+  .form-group { display: flex; flex-direction: column; gap: 8px; }
+  .form-group.flex1 { flex: 1; min-width: 120px; }
+  .form-group.flex2 { flex: 2; min-width: 180px; }
+  .form-label {
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text2);
+    font-weight: 600;
+  }
+  .form-input, .form-select {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 16px;
+    padding: 12px 16px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  .form-input:focus, .form-select:focus { border-color: var(--accent); }
+  .form-select option { background: var(--bg3); }
+
+  /* ── BUTTONS ── */
+  .btn {
+    padding: 12px 28px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .btn-primary { background: var(--accent); color: var(--bg); }
+  .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+  .btn-sell { background: var(--accent2); color: #fff; }
+  .btn-sell:hover { opacity: 0.85; transform: translateY(-1px); }
+  .btn-sm { padding: 8px 16px; font-size: 14px; }
+
+  /* ── TABLE ── */
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text3);
+    font-weight: 600;
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  td {
+    padding: 16px;
+    border-bottom: 1px solid rgba(42,48,64,0.5);
+    color: var(--text2);
+    font-size: 15px;
+  }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  td.mono { font-family: 'JetBrains Mono', monospace; font-size: 14px; }
+  td.name { color: var(--text); font-weight: 600; }
+  td.profit { color: var(--green); font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 600; }
+  td.loss { color: var(--red); font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 600; }
+  td.dim { color: var(--text3); font-size: 13px; }
+
+  /* ── SELL INPUT ── */
+  .sell-price-input {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    padding: 8px 12px;
+    outline: none;
+    width: 120px;
+    transition: border-color 0.2s;
+  }
+  .sell-price-input:focus { border-color: var(--accent2); }
+
+  /* ── SPINNER ── */
+  .spinner {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── PRICE STATUS ── */
+  .price-status {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px;
+    color: var(--text3);
+    margin-bottom: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 1px;
+  }
+  .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--text3); flex-shrink: 0;
+  }
+  .status-live .dot { background: var(--green); animation: pulse 1.5s infinite; }
+  .status-err .dot { background: var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* ── TAGS ── */
+  .tag-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .tag {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    font-size: 14px;
+    color: var(--text2);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .tag-del { color: var(--text3); cursor: pointer; font-size: 16px; transition: color 0.2s; }
+  .tag-del:hover { color: var(--red); }
+
+  /* ── SUMMARY BAR ── */
+  .summary-bar {
+    display: flex; gap: 32px; flex-wrap: wrap;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 20px 32px;
+    margin-bottom: 28px;
+  }
+  .summary-item { display: flex; flex-direction: column; gap: 6px; }
+  .summary-label { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--text3); font-weight: 600; }
+  .summary-value { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 600; }
+  .summary-value.profit { color: var(--green); }
+  .summary-value.loss { color: var(--red); }
+  .summary-value.neutral { color: var(--text); }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+    background: var(--accent); color: var(--bg);
+    font-size: 14px; font-weight: 700; letter-spacing: 1px;
+    padding: 14px 32px; opacity: 0; transition: opacity 0.3s;
+    z-index: 9998; pointer-events: none;
+  }
+  #toast.show { opacity: 1; }
+  #toast.err { background: var(--red); color: #fff; }
+
+  @media (max-width: 768px) {
+    .header { padding: 16px 20px; }
+    .tabs { padding: 0 20px; overflow-x: auto; justify-content: flex-start; }
+    .content { padding: 24px 20px; }
+    .tab { padding: 14px 18px; font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ LOCK ══ -->
+<div id="lockScreen">
+  <div class="lock-title">INVEST7</div>
+  <div class="lock-sub">Private Investment Tracker</div>
+  <div class="lock-box">
+    <span class="lock-label">비밀번호</span>
+    <input class="lock-input" id="pwInput" type="password" maxlength="10"
+           placeholder="····" autocomplete="off"
+           onkeydown="if(event.key==='Enter')unlock()">
+    <div class="lock-err" id="lockErr"></div>
+    <button class="lock-btn" onclick="unlock()">ENTER</button>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="app">
+  <header class="header">
+    <div class="header-title">INVEST7</div>
+    <div class="header-time" id="clockEl"></div>
+  </header>
+  <nav class="tabs">
+    <div class="tab active" onclick="switchTab('manage')">종목 · 계좌</div>
+    <div class="tab" onclick="switchTab('buy')">매수</div>
+    <div class="tab" onclick="switchTab('sell')">매도</div>
+    <div class="tab" onclick="switchTab('profit')">수익현황</div>
+  </nav>
+
+  <div class="content">
+
+    <!-- 종목·계좌 -->
+    <div class="panel active" id="panel-manage">
+      <div class="section-header"><div class="section-title">종목 · 계좌 관리</div></div>
+      <div class="card">
+        <div class="card-title">계좌 등록</div>
+        <div class="form-row">
+          <div class="form-group flex1">
+            <label class="form-label">계좌 식별명 (예: 9180)</label>
+            <input class="form-input" id="accInput" placeholder="끝자리 4자리 등" maxlength="20">
+          </div>
+          <button class="btn btn-primary" onclick="addAccount()">등록</button>
+        </div>
+        <div class="tag-list" id="accList"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">종목 등록</div>
+        <div class="form-row">
+          <div class="form-group flex1">
+            <label class="form-label">종목명 (한글)</label>
+            <input class="form-input" id="stockNameInput" placeholder="예: 삼성전자">
+          </div>
+          <div class="form-group flex1">
+            <label class="form-label">종목코드 (숫자)</label>
+            <input class="form-input" id="stockCodeInput" placeholder="예: 005930" maxlength="10">
+          </div>
+          <button class="btn btn-primary" onclick="addStock()">등록</button>
+        </div>
+        <div class="tag-list" id="stockList"></div>
+      </div>
+    </div>
+
+    <!-- 매수 -->
+    <div class="panel" id="panel-buy">
+      <div class="section-header"><div class="section-title">매수 입력</div></div>
+      <div class="card">
+        <div class="card-title">매수 정보 입력</div>
+        <div class="form-row">
+          <div class="form-group flex1">
+            <label class="form-label">계좌</label>
+            <select class="form-select" id="buyAccount"></select>
+          </div>
+          <div class="form-group flex2">
+            <label class="form-label">종목</label>
+            <select class="form-select" id="buyStock"></select>
+          </div>
+          <div class="form-group flex1">
+            <label class="form-label">매수가</label>
+            <input class="form-input" id="buyPrice" type="number" placeholder="0" min="0">
+          </div>
+          <div class="form-group flex1">
+            <label class="form-label">수량</label>
+            <input class="form-input" id="buyQty" type="number" placeholder="0" min="1">
+          </div>
+          <button class="btn btn-primary" onclick="submitBuy()">매수 등록</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 매도 -->
+    <div class="panel" id="panel-sell">
+      <div class="section-header">
+        <div class="section-title">매도 처리</div>
+        <div class="section-count" id="sellCount">0 건</div>
+      </div>
+      <div class="card">
+        <div class="card-title">미매도 보유 목록</div>
+        <div class="price-status" id="priceStatus">
+          <span class="dot"></span>
+          <span id="priceStatusText">현재가 조회 대기중</span>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>매수일</th>
+                <th>계좌</th>
+                <th>종목명</th>
+                <th>매수가</th>
+                <th>수량</th>
+                <th>현재가</th>
+                <th>평가손익</th>
+                <th>수익률</th>
+                <th>매도가 입력</th>
+                <th>처리</th>
+              </tr>
+            </thead>
+            <tbody id="sellTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 수익현황 -->
+    <div class="panel" id="panel-profit">
+      <div class="section-header">
+        <div class="section-title">수익현황</div>
+        <div class="section-count" id="profitCount">0 건</div>
+      </div>
+      <div class="summary-bar">
+        <div class="summary-item">
+          <span class="summary-label">총 거래 수</span>
+          <span class="summary-value neutral" id="sumTotal">0</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">총 손익</span>
+          <span class="summary-value neutral" id="sumPnl">0</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">수익 거래</span>
+          <span class="summary-value profit" id="sumWin">0</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">손실 거래</span>
+          <span class="summary-value loss" id="sumLoss">0</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">완료 거래 내역 (최신순)</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>매도일</th>
+                <th>계좌</th>
+                <th>종목명</th>
+                <th>매수가</th>
+                <th>매도가</th>
+                <th>수량</th>
+                <th>손익금액</th>
+                <th>수익률</th>
+              </tr>
+            </thead>
+            <tbody id="profitTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const GAS_URL = 'https://script.google.com/macros/s/AKfycby_N7QXb8wIzGYzJkf69L0n84oIbPKL-EdHfC7M5Csy1-TZQyPFaDMsCvbABpBppjOn/exec';
+const LS_KEY  = 'invest7_auth';
+const LS_TOKEN = 'invest7_token';
+const FEE_RATE = 0.00028;
+
+// ── GAS 호출 ──
+async function gasCall(params) {
+  const token = localStorage.getItem(LS_TOKEN);
+  const res = await fetch(GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ ...params, token }).toString()
+  });
+  return await res.json();
+}
+
+// ── 자동 로그인 체크 ──
+window.addEventListener('DOMContentLoaded', () => {
+  if (localStorage.getItem(LS_KEY) === 'ok' && localStorage.getItem(LS_TOKEN)) {
+    document.getElementById('lockScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    initApp();
+  }
+});
+
+// ── GAS 현재가 (doGet 그대로 유지) ──
+async function fetchPrice(code) {
+  try {
+    const res = await fetch(`${GAS_URL}?action=NowPrices&code=${code}`);
+    const data = await res.json();
+    return (data && data.price) ? data.price : null;
+  } catch(e) { return null; }
+}
+
+// ── Lock ──
+async function unlock() {
+  const val = document.getElementById('pwInput').value;
+  const result = await gasCall({ action: 'checkPassword', password: val });
+  if (result.success) {
+    localStorage.setItem(LS_KEY, 'ok');
+    localStorage.setItem(LS_TOKEN, result.token);
+    document.getElementById('lockScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    initApp();
+  } else {
+    const inp = document.getElementById('pwInput');
+    document.getElementById('lockErr').textContent = result.message || '비밀번호가 틀렸습니다';
+    inp.classList.add('error');
+    inp.value = '';
+    setTimeout(() => { inp.classList.remove('error'); document.getElementById('lockErr').textContent = ''; }, 1500);
+  }
+}
+
+// ── Clock ──
+function startClock() {
+  function tick() {
+    const n = new Date();
+    document.getElementById('clockEl').textContent =
+      `${n.getFullYear()}.${p2(n.getMonth()+1)}.${p2(n.getDate())}  ${p2(n.getHours())}:${p2(n.getMinutes())}`;
+  }
+  tick(); setInterval(tick, 1000);
+}
+function p2(n) { return String(n).padStart(2,'0'); }
+
+// ── Toast ──
+let _tt;
+function toast(msg, isErr) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show' + (isErr ? ' err' : '');
+  clearTimeout(_tt);
+  _tt = setTimeout(() => { el.className = ''; }, 2500);
+}
+
+// ── Tabs ──
+function switchTab(name) {
+  ['manage','buy','sell','profit'].forEach((n, i) => {
+    document.querySelectorAll('.tab')[i].classList.toggle('active', n === name);
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  if (name === 'buy')    loadBuyDropdowns();
+  if (name === 'sell')   loadSellTable();
+  if (name === 'profit') loadProfitTable();
+}
+
+// ── Manage ──
+let accounts = [], stocks = [];
+
+async function loadManageData() {
+  try {
+    const result = await gasCall({ action: 'getManage' });
+    if (!result.success) { toast('마스터 데이터 로드 실패', true); return; }
+    accounts = result.data.filter(r => r.type === 'account');
+    stocks   = result.data.filter(r => r.type === 'stock');
+    renderAccList(); renderStockList();
+  } catch(e) { toast('마스터 데이터 로드 실패', true); }
+}
+
+function renderAccList() {
+  document.getElementById('accList').innerHTML = accounts.map(a =>
+    `<div class="tag">${a.name}<span class="tag-del" onclick="delMaster(${a.id},'account')">×</span></div>`
+  ).join('');
+}
+function renderStockList() {
+  document.getElementById('stockList').innerHTML = stocks.map(s =>
+    `<div class="tag">${s.name} <span style="color:var(--text3)">·</span> ${s.code}<span class="tag-del" onclick="delMaster(${s.id},'stock')">×</span></div>`
+  ).join('');
+}
+
+async function addAccount() {
+  const val = document.getElementById('accInput').value.trim();
+  if (!val) { toast('계좌 식별명을 입력하세요', true); return; }
+  try {
+    const result = await gasCall({ action: 'addAccount', name: val });
+    if (!result.success) { toast('등록 실패', true); return; }
+    accounts.push(result.data); renderAccList();
+    document.getElementById('accInput').value = '';
+    toast('계좌 등록 완료');
+  } catch(e) { toast('등록 실패', true); }
+}
+
+async function addStock() {
+  const name = document.getElementById('stockNameInput').value.trim();
+  const code = document.getElementById('stockCodeInput').value.trim();
+  if (!name || !code) { toast('종목명과 종목코드를 모두 입력하세요', true); return; }
+  try {
+    const result = await gasCall({ action: 'addStock', name, code });
+    if (!result.success) { toast('등록 실패', true); return; }
+    stocks.push(result.data); renderStockList();
+    document.getElementById('stockNameInput').value = '';
+    document.getElementById('stockCodeInput').value = '';
+    toast('종목 등록 완료');
+  } catch(e) { toast('등록 실패', true); }
+}
+
+async function delMaster(id, type) {
+  if (!confirm('삭제하시겠습니까?')) return;
+  try {
+    const result = await gasCall({ action: 'delMaster', id });
+    if (!result.success) { toast('삭제 실패', true); return; }
+    if (type === 'account') { accounts = accounts.filter(a => a.id !== id); renderAccList(); }
+    else { stocks = stocks.filter(s => s.id !== id); renderStockList(); }
+    toast('삭제 완료');
+  } catch(e) { toast('삭제 실패', true); }
+}
+
+// ── Buy ──
+function loadBuyDropdowns() {
+  document.getElementById('buyAccount').innerHTML = accounts.length === 0
+    ? '<option value="">-- 계좌 없음 --</option>'
+    : accounts.map(a => `<option value="${a.name}">${a.name}</option>`).join('');
+  document.getElementById('buyStock').innerHTML = stocks.length === 0
+    ? '<option value="">-- 종목 없음 --</option>'
+    : stocks.map(s => `<option value="${s.id}" data-name="${s.name}" data-code="${s.code}">${s.name}</option>`).join('');
+}
+
+async function submitBuy() {
+  const account   = document.getElementById('buyAccount').value;
+  const stkEl     = document.getElementById('buyStock');
+  const selOpt    = stkEl.options[stkEl.selectedIndex];
+  const buy_price = parseFloat(document.getElementById('buyPrice').value);
+  const quantity  = parseFloat(document.getElementById('buyQty').value);
+  if (!account)                       { toast('계좌를 선택하세요', true); return; }
+  if (!selOpt || !selOpt.dataset.name){ toast('종목을 선택하세요', true); return; }
+  if (!buy_price || buy_price <= 0)   { toast('매수가를 입력하세요', true); return; }
+  if (!quantity  || quantity  <= 0)   { toast('수량을 입력하세요', true); return; }
+  const today = new Date().toISOString().slice(0,10);
+  try {
+    const result = await gasCall({
+      action: 'submitBuy',
+      account,
+      stock_name: selOpt.dataset.name,
+      stock_code: selOpt.dataset.code,
+      buy_price,
+      quantity,
+      buy_date: today
+    });
+    if (!result.success) { toast('매수 등록 실패', true); return; }
+    document.getElementById('buyPrice').value = '';
+    document.getElementById('buyQty').value = '';
+    toast('매수 등록 완료');
+  } catch(e) { toast('매수 등록 실패', true); }
+}
+
+// ── Sell ──
+let sellRows = [];
+
+async function loadSellTable() {
+  const statusEl   = document.getElementById('priceStatus');
+  const statusText = document.getElementById('priceStatusText');
+  statusEl.className = 'price-status';
+  statusText.textContent = '현재가 조회 중...';
+
+  try {
+    const result = await gasCall({ action: 'getSellTable' });
+    if (!result.success) { toast('데이터 로드 실패', true); return; }
+    sellRows = result.data;
+    document.getElementById('sellCount').textContent = sellRows.length + ' 건';
+    const tbody = document.getElementById('sellTbody');
+
+    if (sellRows.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:48px;color:var(--text3);font-size:14px;letter-spacing:2px">보유 중인 미매도 종목이 없습니다</td></tr>`;
+      statusEl.className = 'price-status';
+      statusText.textContent = '보유 종목 없음';
+      return;
+    }
+
+    tbody.innerHTML = sellRows.map(r => `
+      <tr id="row-${r.id}">
+        <td class="mono">${r.buy_date}</td>
+        <td>${r.account}</td>
+        <td class="name">${r.stock_name}</td>
+        <td class="mono">${fmt(r.buy_price)}</td>
+        <td class="mono">${fmt(r.quantity)}</td>
+        <td id="cur-${r.id}" class="dim"><span class="spinner"></span></td>
+        <td id="pnl-${r.id}" class="dim">-</td>
+        <td id="pct-${r.id}" class="dim">-</td>
+        <td><input class="sell-price-input" id="sp-${r.id}" type="number" placeholder="매도가" min="0"></td>
+        <td><button class="btn btn-sell btn-sm" onclick="doSell(${r.id})">매도</button></td>
+      </tr>`).join('');
+
+    let ok = 0;
+    await Promise.all(sellRows.map(async r => {
+      const price = await fetchPrice(r.stock_code);
+      const curEl = document.getElementById('cur-' + r.id);
+      const pnlEl = document.getElementById('pnl-' + r.id);
+      const pctEl = document.getElementById('pct-' + r.id);
+      if (!curEl) return;
+      if (price !== null) {
+        ok++;
+        const pnl = (price - r.buy_price) * r.quantity;
+        const pct = (price - r.buy_price) / r.buy_price * 100;
+        const cls  = pnl >= 0 ? 'profit' : 'loss';
+        const sign = pnl >= 0 ? '+' : '';
+        curEl.className = 'mono'; curEl.textContent = fmt(price);
+        pnlEl.className = cls;   pnlEl.textContent = sign + fmt(Math.round(pnl));
+        pctEl.className = cls;   pctEl.textContent = sign + pct.toFixed(2) + '%';
+      } else {
+        curEl.className = 'dim'; curEl.textContent = '-';
+        pnlEl.className = 'dim'; pnlEl.textContent = '-';
+        pctEl.className = 'dim'; pctEl.textContent = '-';
+      }
+    }));
+
+    statusEl.className = ok > 0 ? 'price-status status-live' : 'price-status status-err';
+    statusText.textContent = ok > 0
+      ? `현재가 조회 완료 (${ok}/${sellRows.length}건)`
+      : '현재가 조회 실패 (장 마감 또는 네트워크 오류)';
+
+  } catch(e) {
+    toast('데이터 로드 실패', true);
+    statusEl.className = 'price-status status-err';
+    statusText.textContent = '데이터 로드 실패';
+  }
+}
+
+async function doSell(id) {
+  const inp = document.getElementById('sp-' + id);
+  const sell_price = parseFloat(inp.value);
+  if (!sell_price || sell_price <= 0) { toast('매도가를 입력하세요', true); return; }
+  const today = new Date().toISOString().slice(0,10);
+  try {
+    const result = await gasCall({ action: 'doSell', id, sell_price, sell_date: today });
+    if (!result.success) { toast('매도 처리 실패', true); return; }
+    document.getElementById('row-' + id)?.remove();
+    sellRows = sellRows.filter(r => r.id !== id);
+    document.getElementById('sellCount').textContent = sellRows.length + ' 건';
+    if (sellRows.length === 0) {
+      document.getElementById('sellTbody').innerHTML =
+        `<tr><td colspan="10" style="text-align:center;padding:48px;color:var(--text3);font-size:14px;letter-spacing:2px">보유 중인 미매도 종목이 없습니다</td></tr>`;
+    }
+    toast('매도 처리 완료');
+  } catch(e) { toast('매도 처리 실패', true); }
+}
+
+// ── Profit ──
+async function loadProfitTable() {
+  try {
+    const result = await gasCall({ action: 'getProfitTable' });
+    if (!result.success) { toast('수익현황 로드 실패', true); return; }
+    const rows = result.data;
+    document.getElementById('profitCount').textContent = rows.length + ' 건';
+    const tbody = document.getElementById('profitTbody');
+
+    if (rows.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:48px;color:var(--text3);font-size:14px;letter-spacing:2px">완료된 거래가 없습니다</td></tr>`;
+      updateSummary(0, 0, 0, 0); return;
+    }
+
+    let totalPnl = 0, winCount = 0, lossCount = 0;
+    tbody.innerHTML = rows.map(r => {
+      const sellAmt = r.sell_price * r.quantity;
+      const pnl     = sellAmt - r.buy_price * r.quantity - sellAmt * FEE_RATE;
+      const pct     = (r.sell_price - r.buy_price) / r.buy_price * 100;
+      totalPnl += pnl;
+      if (pnl >= 0) winCount++; else lossCount++;
+      const cls  = pnl >= 0 ? 'profit' : 'loss';
+      const sign = pnl >= 0 ? '+' : '';
+      return `<tr>
+        <td class="mono">${r.sell_date}</td>
+        <td>${r.account}</td>
+        <td class="name">${r.stock_name}</td>
+        <td class="mono">${fmt(r.buy_price)}</td>
+        <td class="mono">${fmt(r.sell_price)}</td>
+        <td class="mono">${fmt(r.quantity)}</td>
+        <td class="${cls}">${sign}${fmtPnl(pnl)}</td>
+        <td class="${cls}">${sign}${pct.toFixed(2)}%</td>
+      </tr>`;
+    }).join('');
+    updateSummary(rows.length, totalPnl, winCount, lossCount);
+  } catch(e) { toast('수익현황 로드 실패', true); }
+}
+
+function updateSummary(total, pnl, win, loss) {
+  document.getElementById('sumTotal').textContent = total;
+  const el = document.getElementById('sumPnl');
+  const sign = pnl >= 0 ? '+' : '';
+  el.textContent = sign + fmtPnl(pnl);
+  el.className = 'summary-value ' + (pnl >= 0 ? 'profit' : 'loss');
+  document.getElementById('sumWin').textContent  = win;
+  document.getElementById('sumLoss').textContent = loss;
+}
+
+// ── Utils ──
+function fmt(n) {
+  if (n == null) return '-';
+  return Number(n).toLocaleString('ko-KR');
+}
+function fmtPnl(n) {
+  if (n == null) return '-';
+  const abs = Math.abs(n);
+  return abs % 1 === 0
+    ? Math.abs(Math.round(n)).toLocaleString('ko-KR')
+    : Math.abs(n).toLocaleString('ko-KR', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+// ── Init ──
+async function initApp() {
+  startClock();
+  await loadManageData();
+}
+</script>
+</body>
+</html>
